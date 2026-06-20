@@ -1,100 +1,143 @@
-/**
- * Global Media news portal script
- *
- * This script fetches news articles from `data/news.json`, builds the category
- * filter, and renders the news list. It also handles search and filter
- * interactions. The data file is kept separate so that a GitHub Action can
- * update it automatically when new articles are approved.
- */
-async function loadNews() {
+let articles = [];
+let currentIndex = 0;
+
+function getTitle(article) {
+  return article.heading || article.headline || article.title || 'Untitled News';
+}
+
+function getDescription(article) {
+  return article.description || article.content || article.body || 'No description available.';
+}
+
+function getDateValue(article) {
+  return article.datetime || article.dateTime || article.date || article.created_at || '';
+}
+
+function formatDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function safeImageUrl(url) {
+  if (!url) return '';
   try {
-    const response = await fetch('data/news.json');
-    const articles = await response.json();
-
-    // Populate category filter with unique categories
-    const categories = new Set();
-    articles.forEach((article) => {
-      if (article.category) {
-        categories.add(article.category.trim());
-      }
-    });
-
-    const categoryFilter = document.getElementById('categoryFilter');
-    categories.forEach((cat) => {
-      const option = document.createElement('option');
-      option.value = cat;
-      option.textContent = cat;
-      categoryFilter.appendChild(option);
-    });
-
-    // Render all articles initially
-    displayArticles(articles);
-
-    // Attach search and filter handlers
-    document.getElementById('searchInput').addEventListener('input', () => {
-      filterArticles(articles);
-    });
-    categoryFilter.addEventListener('change', () => {
-      filterArticles(articles);
-    });
-
-    // Update footer year
-    document.getElementById('year').textContent = new Date().getFullYear();
-  } catch (err) {
-    console.error('Failed to load news:', err);
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol) ? url : '';
+  } catch {
+    return '';
   }
 }
 
-/**
- * Display the given list of articles in the #newsContainer.
- * @param {Array} articles - list of article objects
- */
-function displayArticles(articles) {
-  const container = document.getElementById('newsContainer');
-  container.innerHTML = '';
+function sortByNewest(items) {
+  return [...items].sort((a, b) => {
+    const dateA = new Date(getDateValue(a)).getTime() || 0;
+    const dateB = new Date(getDateValue(b)).getTime() || 0;
+    return dateB - dateA;
+  });
+}
+
+function renderArticle() {
+  const container = document.getElementById('article-container');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  if (!container) return;
+
   if (!articles.length) {
-    container.innerHTML = '<p>No articles found.</p>';
+    container.innerHTML = `
+      <section class="empty-state">
+        <h3>No published news yet</h3>
+        <p>Approved submissions will appear here in newest-first order.</p>
+      </section>
+    `;
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
     return;
   }
-  articles.forEach((article) => {
-    const div = document.createElement('div');
-    div.className = 'article';
 
-    const headline = document.createElement('h3');
-    headline.textContent = article.headline;
-    div.appendChild(headline);
+  const article = articles[currentIndex];
+  const imageUrl = safeImageUrl(article.image || article.imageUrl || article.image_url);
+  const metaParts = [
+    formatDate(getDateValue(article)),
+    article.category,
+    article.author
+  ].filter(Boolean);
 
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    const dateStr = article.date ? new Date(article.date).toLocaleDateString() : '';
-    meta.textContent = `${dateStr}${article.author ? ' | ' + article.author : ''}${article.category ? ' | ' + article.category : ''}`;
-    div.appendChild(meta);
+  container.innerHTML = `
+    <div class="edition-bar">
+      <span>Published News</span>
+      <span>${currentIndex + 1} of ${articles.length}</span>
+    </div>
+    <article class="news-article">
+      <h3 class="article-heading"></h3>
+      <div class="article-meta"></div>
+      ${imageUrl ? '<img class="article-image" alt="News image" />' : ''}
+      <div class="article-description"></div>
+    </article>
+  `;
 
-    const content = document.createElement('p');
-    content.textContent = article.content;
-    div.appendChild(content);
+  container.querySelector('.article-heading').textContent = getTitle(article);
+  container.querySelector('.article-meta').textContent = metaParts.join(' | ');
+  container.querySelector('.article-description').textContent = getDescription(article);
 
-    container.appendChild(div);
-  });
+  const imageElement = container.querySelector('.article-image');
+  if (imageElement) {
+    imageElement.src = imageUrl;
+  }
+
+  if (prevBtn) prevBtn.disabled = currentIndex === 0;
+  if (nextBtn) nextBtn.disabled = currentIndex === articles.length - 1;
 }
 
-/**
- * Filter articles based on the search input and category selection.
- * @param {Array} allArticles - master list of all articles
- */
-function filterArticles(allArticles) {
-  const query = document.getElementById('searchInput').value.toLowerCase();
-  const selectedCategory = document.getElementById('categoryFilter').value;
-  const filtered = allArticles.filter((article) => {
-    const matchesCategory = !selectedCategory || article.category === selectedCategory;
-    const matchesQuery =
-      article.headline.toLowerCase().includes(query) ||
-      article.content.toLowerCase().includes(query) ||
-      (article.author && article.author.toLowerCase().includes(query));
-    return matchesCategory && matchesQuery;
-  });
-  displayArticles(filtered);
+async function loadNews() {
+  try {
+    const response = await fetch('data/news.json', { cache: 'no-store' });
+    const rawArticles = await response.json();
+    articles = sortByNewest(Array.isArray(rawArticles) ? rawArticles : []);
+    renderArticle();
+  } catch (error) {
+    const container = document.getElementById('article-container');
+    if (container) {
+      container.innerHTML = `
+        <section class="empty-state">
+          <h3>Unable to load news</h3>
+          <p>Please refresh the page after a moment.</p>
+        </section>
+      `;
+    }
+    console.error('Failed to load news:', error);
+  }
 }
 
-// Load articles when the DOM is ready
-window.addEventListener('DOMContentLoaded', loadNews);
+document.addEventListener('DOMContentLoaded', () => {
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex -= 1;
+        renderArticle();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (currentIndex < articles.length - 1) {
+        currentIndex += 1;
+        renderArticle();
+      }
+    });
+  }
+
+  loadNews();
+});
