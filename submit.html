@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit News | Global Media</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="site-header">
+  <h1>Global Media</h1>
+  <h2>Submit public news for owner approval</h2>
+  <nav class="main-nav">
+    <a href="index.html">Published News</a>
+  </nav>
+</header>
+<main>
+  <section class="submit-card">
+    <h3>Submit News</h3>
+    <p>Anyone can submit a story, but it will only appear on the public news page after the owner reviews and approves it.</p>
+    <ol>
+      <li>Click the button below.</li>
+      <li>Fill headline, image URL, category, author and description.</li>
+      <li>Create the GitHub issue.</li>
+      <li>The owner applies the <strong>approved</strong> label to publish it.</li>
+    </ol>
+    <a href="https://github.com/cazmick/public-news-portal/issues/new?template=news_submission.yml" target="_blank" rel="noopener noreferrer">Open News Submission Form</a>
+  </section>
+</main>
+<footer>
+  <p>&copy; <span id="current-year"></span> Global Media</p>
+</footer>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
