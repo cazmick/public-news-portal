@@ -1,42 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Global Media</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <h1>Global Media</h1>
-      <h2>Your source for community news</h2>
-    </header>
-    <nav class="site-nav">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search news…"
-        aria-label="Search news"
-      />
-      <select id="categoryFilter" aria-label="Filter by category">
-        <option value="">All Categories</option>
-      </select>
-      <!-- The submit link points to the repository's issue form for news submissions. -->
-      <a
-        id="submitLink"
-        href="https://github.com/cazmick/public-news-portal/issues/new?template=news_submission.yml"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Submit News
-      </a>
-    </nav>
-    <main id="newsContainer" class="news-container">
-      <!-- Articles will be inserted here by script.js -->
-    </main>
-    <footer class="site-footer">
-      <p>&copy; <span id="year"></span> Global Media. All rights reserved.</p>
-    </footer>
-    <script src="script.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Media News Portal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="site-header">
+  <h1>Global Media</h1>
+  <h2>Your source for community news</h2>
+  <nav class="main-nav">
+    <a href="submit.html">Submit News</a>
+  </nav>
+</header>
+<main>
+  <div id="article-container">
+    <!-- Article content will be injected here by JavaScript -->
+  </div>
+  <div class="navigation">
+    <button id="prev-btn" class="nav-button">Previous</button>
+    <button id="next-btn" class="nav-button">Next</button>
+  </div>
+</main>
+<footer>
+  <p>&copy; <span id="current-year"></span> Global Media</p>
+</footer>
+<script src="script.js"></script>
+<script>
+  // Update current year
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+</body>
 </html>
