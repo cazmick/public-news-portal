@@ -1,0 +1,44 @@
+name: Submit news article
+description: Use this form to submit a news article to Global Media.
+title: "[News]: "
+labels: ["news-submission"]
+body:
+  - type: input
+    id: headline
+    attributes:
+      label: Headline
+      description: The headline or title for the news article
+      placeholder: "Enter headline"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Choose a category for the news
+      options:
+        - Politics
+        - Business
+        - Entertainment
+        - Sports
+        - Technology
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Your name or pseudonym as the author
+      placeholder: "Enter author name"
+    validations:
+      required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: Content
+      description: Write the full news article content
+      placeholder: "Enter content"
+      value: ""
+    validations:
+      required: true
