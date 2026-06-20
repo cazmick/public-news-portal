@@ -4,41 +4,45 @@ function parseIssueBody(body) {
   const lines = body.split('\n');
   const result = {};
   let currentKey = null;
-  lines.forEach(line => {
+
+  lines.forEach((line) => {
     if (line.startsWith('### ')) {
       currentKey = line.substring(4).trim().toLowerCase();
       result[currentKey] = '';
     } else if (currentKey) {
-      result[currentKey] += (result[currentKey] ? '\n' : '') + line.trim();
+      result[currentKey] += `${result[currentKey] ? '\n' : ''}${line.trim()}`;
     }
   });
+
   return {
-    title: result['headline'] || '',
-    category: result['category'] || '',
-    author: result['author'] || '',
-    content: result['content'] || ''
+    heading: result.headline || '',
+    image: result['image url'] || '',
+    category: result.category || '',
+    author: result.author || '',
+    description: result['news description'] || result.content || '',
   };
 }
 
 function run() {
-  // Read GitHub event payload from environment variable
   const payload = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
   const issue = payload.issue;
-
-  // Parse issue body into structured news
-  const { title, category, author, content } = parseIssueBody(issue.body);
-
-  // Path to the news JSON file
+  const parsedNews = parseIssueBody(issue.body || '');
   const newsPath = 'data/news.json';
   const newsData = JSON.parse(fs.readFileSync(newsPath, 'utf8'));
 
-  // Use issue creation time as date
-  const timestamp = new Date(issue.created_at).toISOString();
+  newsData.unshift({
+    id: issue.number,
+    heading: parsedNews.heading,
+    image: parsedNews.image,
+    category: parsedNews.category,
+    author: parsedNews.author,
+    description: parsedNews.description,
+    date: new Date().toISOString(),
+    submittedAt: issue.created_at,
+    submittedVia: issue.html_url,
+  });
 
-  // Add new post at the beginning of the array
-  newsData.unshift({ title, category, author, content, date: timestamp });
-
-  // Write updated news data back to file
+  newsData.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
   fs.writeFileSync(newsPath, JSON.stringify(newsData, null, 2));
 }
 
