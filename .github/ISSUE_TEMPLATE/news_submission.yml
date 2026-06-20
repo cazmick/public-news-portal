@@ -7,10 +7,18 @@ body:
     id: headline
     attributes:
       label: Headline
-      description: The headline or title for the news article
-      placeholder: "Enter headline"
+      description: The heading/title that will appear on the news page
+      placeholder: "Enter news heading"
     validations:
       required: true
+  - type: input
+    id: image_url
+    attributes:
+      label: Image URL
+      description: Paste a public image URL starting with http or https
+      placeholder: "https://example.com/news-image.jpg"
+    validations:
+      required: false
   - type: dropdown
     id: category
     attributes:
@@ -34,11 +42,11 @@ body:
     validations:
       required: true
   - type: textarea
-    id: content
+    id: description
     attributes:
-      label: Content
-      description: Write the full news article content
-      placeholder: "Enter content"
+      label: News Description
+      description: Write the full news description
+      placeholder: "Enter news description"
       value: ""
     validations:
       required: true
